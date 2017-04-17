@@ -6,6 +6,8 @@ var BLOCK_SIZE = 8;
 var QRCodeView = false;
 var freeCamera, canvas, engine, lovescene;
 var camPositionInLabyrinth, camRotationInLabyrinth;
+var mCount;
+var scene;
 
 function buildGround(scene, mCount){
     var groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
@@ -80,7 +82,7 @@ function buildCube(scene){
     var cubeWallMaterial = getMaterial(scene);
     var mainCube = BABYLON.Mesh.CreateBox("mainCube", BLOCK_SIZE, scene);
     mainCube.material = cubeWallMaterial;
-    mainCube.checkCollisions = true;
+    mainCube.checkCollisions = false;
     return mainCube;
 }
 
@@ -112,88 +114,101 @@ function createMaze(scene, qrcode, mCount){
             */}    
          }
     }
-
+    createBorder();
     var x = BLOCK_SIZE / 2 + (7 - (mCount / 2)) * BLOCK_SIZE;
     var y = BLOCK_SIZE / 2 + (1 - (mCount / 2)) * BLOCK_SIZE;
     freeCamera.position = new BABYLON.Vector3(x, 5, y);
 }
 
+function createBorder(){
+    var plane = BABYLON.MeshBuilder.CreatePlane("plane_0", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE, height:BLOCK_SIZE}, scene);
+    plane.position = new BABYLON.Vector3(BLOCK_SIZE / 2 + ((mCount / 2)) * BLOCK_SIZE/6, BLOCK_SIZE / 2,
+                                         BLOCK_SIZE / 2 + ((mCount / 2)) * BLOCK_SIZE)
+    plane.checkCollisions = true;
+}
+
+ function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            var words = text.split(' ');
+            var line = '';
+            var numberOfLines = 0;
+            for (var n = 0; n < words.length; n++) {
+                var testLine = line + words[n] + ' ';
+                var metrics = context.measureText(testLine);
+                var testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, y);
+                    line = words[n] + ' ';
+                    y += lineHeight;
+                    numberOfLines++;
+                }
+                else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, y);
+            return numberOfLines;
+        }
+
+var debug = function (text)
+        {
+            /*// Make a dynamic texture
+            var dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 512, scene, true);
+            dynamicTexture.hasAlpha = true;
+            var textureContext = dynamicTexture.getContext();
+            textureContext.save();
+            textureContext.textAlign = "center";
+            textureContext.font = "58px Calibri";
+            // Some magic numbers
+            var lineHeight = 70;
+            var lineWidth = 500;
+            var fontHeight = 53;
+            var offset = 10; // space between top/bottom borders and actual text
+            var text = "BLABLA hehe blabla"; // Text to display
+            var numberOfLines = 1; // I usually calculate that but for this exmaple let's just say it's 1
+            var textHeight = fontHeight + offset;
+            var labelHeight = numberOfLines * lineHeight + (2 * offset);
+            // Background
+            textureContext.fillStyle = "white";
+            textureContext.fillRect(0, 0, dynamicTexture.getSize().width, labelHeight);
+        	textureContext.fillStyle = "blue";
+            textureContext.fillRect(0, labelHeight, dynamicTexture.getSize().width, dynamicTexture.getSize().height);
+            // text
+            textureContext.fillStyle = "black";
+            wrapText(textureContext, text, dynamicTexture.getSize().width / 2, textHeight, lineWidth, lineHeight);
+            textureContext.restore();
+            dynamicTexture.update(false);
+            // Create the sprite
+            var spriteManager = new BABYLON.SpriteManager("sm", "", 2, 512, scene);
+            spriteManager._spriteTexture = dynamicTexture;
+            spriteManager._spriteTexture.wrapU = BABYLON.Texture.CLAMP_ADDRESSMODE;
+            spriteManager._spriteTexture.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
+            var sprite = new BABYLON.Sprite("textSprite", spriteManager);
+            var result = {
+                object: sprite,
+                height: labelHeight
+            };
+            return result;*/
+        };
+
+
 function createQRCodeMaze(secret) {
     //number of modules count or cube in width/height
-    var scene = new BABYLON.Scene(engine);
+    scene = new BABYLON.Scene(engine);
     var qrcode = new QRCode(document.createElement("div"), { width: 400, height: 400 });
     qrcode.makeCode(secret);
-    var mCount = qrcode._oQRCode.moduleCount;
-    scene.gravity = new BABYLON.Vector3(0, -0, 0);
+    mCount = qrcode._oQRCode.moduleCount;
+    scene.gravity = new BABYLON.Vector3(0, -0.8, 0);
     scene.collisionsEnabled = true;
     buildCamera(scene, mCount);
     var ground = buildGround(scene, mCount);
     var skybox = buildSky(scene, mCount);
     putLigths(scene);
     createMaze(scene,qrcode, mCount);
-    alert(mCount);
+    debug();
     return scene;
 };
 
-var animateCameraPositionAndRotation = function (freeCamera, fromPosition, toPosition,
-                                                 fromRotation, toRotation) {
-
-    var animCamPosition = new BABYLON.Animation("animCam", "position", 30,
-                              BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
-                              BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-
-    var keysPosition = [];
-    keysPosition.push({
-        frame: 0,
-        value: fromPosition
-    });
-    keysPosition.push({
-        frame: 100,
-        value: toPosition
-    });
-
-    animCamPosition.setKeys(keysPosition);
-
-    var animCamRotation = new BABYLON.Animation("animCam", "rotation", 30,
-                              BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
-                              BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
-
-    var keysRotation = [];
-    keysRotation.push({
-        frame: 0,
-        value: fromRotation
-    });
-    keysRotation.push({
-        frame: 100,
-        value: toRotation
-    });
-
-    animCamRotation.setKeys(keysRotation);
-    freeCamera.animations.push(animCamPosition);
-    freeCamera.animations.push(animCamRotation);
-
-    scene.beginAnimation(freeCamera, 0, 100, false);
-};
-
 window.addEventListener("keydown", function (event) {
-    if (event.keyCode === 32) {
-        if (!QRCodeView) {
-            QRCodeView = true;
-            // Saving current position & rotation in the maze
-            camPositionInLabyrinth = freeCamera.position;
-            camRotationInLabyrinth = freeCamera.rotation;
-            animateCameraPositionAndRotation(freeCamera, freeCamera.position,
-                new BABYLON.Vector3(16, 400, 15),
-                freeCamera.rotation,
-                new BABYLON.Vector3(1.4912565104551518, -1.5709696842019767,freeCamera.rotation.z));
-        }
-        else {
-            QRCodeView = false;
-            animateCameraPositionAndRotation(freeCamera, freeCamera.position,
-                camPositionInLabyrinth, freeCamera.rotation, camRotationInLabyrinth);
-        }
-        freeCamera.applyGravity = !QRCodeView;
-    }
 }, false);
 
 
@@ -206,11 +221,12 @@ window.onload = function () {
         window.addEventListener("resize", function () {
             engine.resize();
         });
-        lovescene = createQRCodeMaze("Jane Doe___________________________________________________________________________________________________________");
+        lovescene = createQRCodeMaze("Puto Natxo :)");
         // Enable keyboard/mouse controls on the scene (FPS like mode)
         lovescene.activeCamera.attachControl(canvas);
         engine.runRenderLoop(function () {
             lovescene.render();
+            debug();
         });
      }
 };
