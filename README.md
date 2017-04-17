@@ -1,2 +1,2 @@
 # maze
-cumple natxo
+boda natxo
