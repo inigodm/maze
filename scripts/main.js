@@ -121,10 +121,21 @@ function createMaze(scene, qrcode, mCount){
 }
 
 function createBorder(){
-    var plane = BABYLON.MeshBuilder.CreatePlane("plane_0", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE, height:BLOCK_SIZE}, scene);
-    plane.position = new BABYLON.Vector3(BLOCK_SIZE / 2 + ((mCount / 2)) * BLOCK_SIZE/6, BLOCK_SIZE / 2,
-                                         BLOCK_SIZE / 2 + ((mCount / 2)) * BLOCK_SIZE)
+    var plane = BABYLON.MeshBuilder.CreatePlane("plane_0", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
+    plane.position = new BABYLON.Vector3(0, BLOCK_SIZE/2, 1/2 * (BLOCK_SIZE + mCount * BLOCK_SIZE));
     plane.checkCollisions = true;
+    var plane1 = plane.clone("ClonedPlane1");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
+    plane1.position = new BABYLON.Vector3(0 , -BLOCK_SIZE/2, -1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE));
+    plane1.rotation.y=Math.PI;
+    plane1.checkCollisions = true;
+    var plane2 = plane.clone("ClonedPlane2");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
+    plane2.position = new BABYLON.Vector3(-1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), BLOCK_SIZE/2, 0);
+    plane2.rotation.y=-Math.PI/2;
+    plane2.checkCollisions = true;
+    var plane3 = plane.clone("ClonedPlane3");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
+    plane3.position = new BABYLON.Vector3(1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), BLOCK_SIZE/2, 0);
+    plane3.rotation.y=Math.PI/2;
+    plane3.checkCollisions = true;
 }
 
  function wrapText(context, text, x, y, maxWidth, lineHeight) {
