@@ -8,6 +8,7 @@ var freeCamera, canvas, engine, lovescene;
 var camPositionInLabyrinth, camRotationInLabyrinth;
 var mCount;
 var scene;
+var checkCollision = true;
 
 function buildGround(scene, mCount){
     var groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
@@ -80,9 +81,9 @@ function cloneOrCreateCube(scene, cube, row, col){
 
 function buildCube(scene){
     var cubeWallMaterial = getMaterial(scene);
-    var mainCube = BABYLON.Mesh.CreateBox("mainCube", BLOCK_SIZE, scene);
+    //var mainCube = BABYLON.MeshBuilder.CreateBox("box", {height: BLOCK_SIZE, width:BLOCK_SIZE}, scene);
+    var mainCube = BABYLON.Mesh.CreateBox("mainCube", BLOCK_SIZE, scene, true);
     mainCube.material = cubeWallMaterial;
-    mainCube.checkCollisions = false;
     return mainCube;
 }
 
@@ -92,13 +93,17 @@ function setCubePosition(cube, mCount, row, col){
 
 }
 
+var cubes = [];
+
 function createMaze(scene, qrcode, mCount){
     var cube = null;
     for (var row = 0; row < mCount; row++) {
         for (var col = 0; col < mCount; col++) {
             if (qrcode._oQRCode.isDark(row, col)) {
                 cube = cloneOrCreateCube(scene, cube, row, col);
+                cube.checkCollisions = checkCollision;
                 setCubePosition(cube, mCount, row, col);
+                cubes.push(cube);
                 /*var soloCube = BABYLON.Mesh.CreateBox("mainCube", BLOCK_SIZE, scene);
                 soloCube.subMeshes = [];
                 soloCube.subMeshes.push(new BABYLON.SubMesh(0, 0, 4, 0, 6, soloCube));
@@ -160,66 +165,31 @@ function createBorder(){
             return numberOfLines;
         }
 
-var debug = function (text)
-        {
-            /*// Make a dynamic texture
-            var dynamicTexture = new BABYLON.DynamicTexture("DynamicTexture", 512, scene, true);
-            dynamicTexture.hasAlpha = true;
-            var textureContext = dynamicTexture.getContext();
-            textureContext.save();
-            textureContext.textAlign = "center";
-            textureContext.font = "58px Calibri";
-            // Some magic numbers
-            var lineHeight = 70;
-            var lineWidth = 500;
-            var fontHeight = 53;
-            var offset = 10; // space between top/bottom borders and actual text
-            var text = "BLABLA hehe blabla"; // Text to display
-            var numberOfLines = 1; // I usually calculate that but for this exmaple let's just say it's 1
-            var textHeight = fontHeight + offset;
-            var labelHeight = numberOfLines * lineHeight + (2 * offset);
-            // Background
-            textureContext.fillStyle = "white";
-            textureContext.fillRect(0, 0, dynamicTexture.getSize().width, labelHeight);
-        	textureContext.fillStyle = "blue";
-            textureContext.fillRect(0, labelHeight, dynamicTexture.getSize().width, dynamicTexture.getSize().height);
-            // text
-            textureContext.fillStyle = "black";
-            wrapText(textureContext, text, dynamicTexture.getSize().width / 2, textHeight, lineWidth, lineHeight);
-            textureContext.restore();
-            dynamicTexture.update(false);
-            // Create the sprite
-            var spriteManager = new BABYLON.SpriteManager("sm", "", 2, 512, scene);
-            spriteManager._spriteTexture = dynamicTexture;
-            spriteManager._spriteTexture.wrapU = BABYLON.Texture.CLAMP_ADDRESSMODE;
-            spriteManager._spriteTexture.wrapV = BABYLON.Texture.CLAMP_ADDRESSMODE;
-            var sprite = new BABYLON.Sprite("textSprite", spriteManager);
-            var result = {
-                object: sprite,
-                height: labelHeight
-            };
-            return result;*/
-        };
-
-
 function createQRCodeMaze(secret) {
     //number of modules count or cube in width/height
     scene = new BABYLON.Scene(engine);
     var qrcode = new QRCode(document.createElement("div"), { width: 400, height: 400 });
     qrcode.makeCode(secret);
     mCount = qrcode._oQRCode.moduleCount;
-    scene.gravity = new BABYLON.Vector3(0, -0.8, 0);
+    scene.gravity = new BABYLON.Vector3(0, -0, 0);
     scene.collisionsEnabled = true;
     buildCamera(scene, mCount);
     var ground = buildGround(scene, mCount);
     var skybox = buildSky(scene, mCount);
     putLigths(scene);
     createMaze(scene,qrcode, mCount);
-    debug();
     return scene;
 };
 
 window.addEventListener("keydown", function (event) {
+	// la Q cambia el estado del wallhack
+	if (event.keyCode == 81){
+		checkCollision = !checkCollision;
+		for (var i = 0; i < cubes.length; i++){
+			cubes[i].checkCollisions = checkCollision;
+		}
+		alert("El wallhack esta " + (!checkCollision ? "activado" : "desactivado"));
+	}
 }, false);
 
 
@@ -232,12 +202,11 @@ window.onload = function () {
         window.addEventListener("resize", function () {
             engine.resize();
         });
-        lovescene = createQRCodeMaze("Puto Natxo :)");
+        lovescene = createQRCodeMaze("Puto Natxo");
         // Enable keyboard/mouse controls on the scene (FPS like mode)
         lovescene.activeCamera.attachControl(canvas);
         engine.runRenderLoop(function () {
             lovescene.render();
-            debug();
         });
      }
 };
