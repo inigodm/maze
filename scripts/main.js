@@ -81,9 +81,10 @@ function cloneOrCreateCube(scene, cube, row, col){
 
 function buildCube(scene){
     var cubeWallMaterial = getMaterial(scene);
-    //var mainCube = BABYLON.MeshBuilder.CreateBox("box", {height: BLOCK_SIZE, width:BLOCK_SIZE}, scene);
+    //var mainCube = BABYLON.MeshBuilder.CreateBox("box", {height: BLOCK_SIZE, width:BLOCK_SIZE, depth:BLOCK_SIZE, updatable:true, sideOrientation:}, scene);
     var mainCube = BABYLON.Mesh.CreateBox("mainCube", BLOCK_SIZE, scene, true);
     mainCube.material = cubeWallMaterial;
+    //mainCube.checkCollisions = false;
     return mainCube;
 }
 
@@ -126,44 +127,23 @@ function createMaze(scene, qrcode, mCount){
 }
 
 function createBorder(){
-    var plane = BABYLON.MeshBuilder.CreatePlane("plane_0", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
-    plane.position = new BABYLON.Vector3(0, BLOCK_SIZE/2, 1/2 * (BLOCK_SIZE + mCount * BLOCK_SIZE));
+	  var wall_h = 2 * BLOCK_SIZE;
+    var plane = BABYLON.MeshBuilder.CreatePlane("plane_0", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: wall_h, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
+    plane.position = new BABYLON.Vector3(0, wall_h / 2, 1/2 * (BLOCK_SIZE + mCount * BLOCK_SIZE));
     plane.checkCollisions = true;
-    var plane1 = plane.clone("ClonedPlane1");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
-    plane1.position = new BABYLON.Vector3(0 , -BLOCK_SIZE/2, -1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE));
+    var plane1 = plane.clone("ClonedPlane1");
+    plane1.position = new BABYLON.Vector3(0 , wall_h / 2, -1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE));
     plane1.rotation.y=Math.PI;
     plane1.checkCollisions = true;
-    var plane2 = plane.clone("ClonedPlane2");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
-    plane2.position = new BABYLON.Vector3(-1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), BLOCK_SIZE/2, 0);
+    var plane2 = plane.clone("ClonedPlane2");
+    plane2.position = new BABYLON.Vector3(-1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), wall_h / 2, 0);
     plane2.rotation.y=-Math.PI/2;
     plane2.checkCollisions = true;
-    var plane3 = plane.clone("ClonedPlane3");//BABYLON.MeshBuilder.CreatePlane("plane_1", {width:(mCount+BLOCK_SIZE)*BLOCK_SIZE,height: 200, sideOrientation:BABYLON.Mesh.FRONTSIDE}, scene);
-    plane3.position = new BABYLON.Vector3(1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), BLOCK_SIZE/2, 0);
+    var plane3 = plane.clone("ClonedPlane3");
+    plane3.position = new BABYLON.Vector3(1/2* (BLOCK_SIZE + mCount * BLOCK_SIZE), wall_h / 2, 0);
     plane3.rotation.y=Math.PI/2;
     plane3.checkCollisions = true;
 }
-
- function wrapText(context, text, x, y, maxWidth, lineHeight) {
-            var words = text.split(' ');
-            var line = '';
-            var numberOfLines = 0;
-            for (var n = 0; n < words.length; n++) {
-                var testLine = line + words[n] + ' ';
-                var metrics = context.measureText(testLine);
-                var testWidth = metrics.width;
-                if (testWidth > maxWidth && n > 0) {
-                    context.fillText(line, x, y);
-                    line = words[n] + ' ';
-                    y += lineHeight;
-                    numberOfLines++;
-                }
-                else {
-                    line = testLine;
-                }
-            }
-            context.fillText(line, x, y);
-            return numberOfLines;
-        }
 
 function createQRCodeMaze(secret) {
     //number of modules count or cube in width/height
@@ -171,7 +151,7 @@ function createQRCodeMaze(secret) {
     var qrcode = new QRCode(document.createElement("div"), { width: 400, height: 400 });
     qrcode.makeCode(secret);
     mCount = qrcode._oQRCode.moduleCount;
-    scene.gravity = new BABYLON.Vector3(0, -0, 0);
+    scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
     scene.collisionsEnabled = true;
     buildCamera(scene, mCount);
     var ground = buildGround(scene, mCount);
@@ -181,14 +161,18 @@ function createQRCodeMaze(secret) {
     return scene;
 };
 
-window.addEventListener("keydown", function (event) {
-	// la Q cambia el estado del wallhack
-	if (event.keyCode == 81){
-		checkCollision = !checkCollision;
+function changeCollisionChecking(){
+	  checkCollision = !checkCollision;
 		for (var i = 0; i < cubes.length; i++){
 			cubes[i].checkCollisions = checkCollision;
 		}
 		alert("El wallhack esta " + (!checkCollision ? "activado" : "desactivado"));
+}
+
+window.addEventListener("keydown", function (event) {
+	// la Q cambia el estado del wallhack
+	if (event.keyCode == 81){
+		changeCollisionChecking();
 	}
 }, false);
 
