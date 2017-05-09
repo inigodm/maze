@@ -12,3 +12,7 @@ Hacen falta fotos de natxo y habra que mirar como se ponen que actualmente no es
 Tambien hay que hacer un gran MESH, que parece que es una buena optimizacion -pero esto solo al final y si sobra tiempo-.
 
 PD: ayer por la tarde no fui capaz de poner un puto texto en 2D en la pantalla. Seria muy conveniente.
+
+Ofuscar con esto:
+
+https://javascriptobfuscator.com/Javascript-Obfuscator.aspx
